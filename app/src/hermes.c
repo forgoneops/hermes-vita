@@ -67,7 +67,7 @@ static int live_ver = 0;
 static int tab = 0, sel = 0, scroll = 0;
 static int ime_open = 0, ime_purpose = 0;
 static uint16_t ime_input[256];
-static unsigned int speak_until = 0, last_input_ms = 0, think_since = 0;
+static unsigned int start_since = 0, speak_until = 0, last_input_ms = 0, think_since = 0;
 static unsigned int last_hash = 0;
 static int hash_init = 0;
 static const char *const tab_name[4] = { "TALK", "PANEL", "SESSIONS", "LINK" };
@@ -368,7 +368,7 @@ static void draw_footer(void)
     float x = 24;
     fluted_rule(0, 490, SW); rect(0, 496, SW, 48, C_PANEL);
     text(24, 508, C_GOLD, 0.5f, "LIVE  /  HOME NETWORK  /  YOUR VOICE AND PROMPTS GO ONLY TO YOUR PC");
-    key_hint(&x, "L / R", "PAGE"); key_hint(&x, "HOLD SELECT", "TALK"); key_hint(&x, "TRIANGLE", "TYPE"); key_hint(&x, "O", "NEW CHAT"); key_hint(&x, "X", "OK"); key_hint(&x, "START", "EXIT");
+    key_hint(&x, "L / R", "PAGE"); key_hint(&x, "HOLD SELECT", "TALK"); key_hint(&x, "TRIANGLE", "TYPE"); key_hint(&x, "O", "NEW CHAT"); key_hint(&x, "X", "OK"); key_hint(&x, "HOLD START", "EXIT");
 }
 
 static void draw_frame(void)
@@ -469,7 +469,7 @@ int main(void)
         prev = pad.buttons;
 
         if (!ime_open) {
-            if (pressed & SCE_CTRL_START) break;
+            if (pad.buttons & SCE_CTRL_START) { if (!start_since) start_since = now_ms(); if (now_ms() - start_since > 1500u) break; } else start_since = 0;   /* hold START to quit: a quick PS+START still takes a screenshot */
             int was_tab = tab;
             if (pressed & SCE_CTRL_LTRIGGER) tab = (tab + 3) % 4;
             if (pressed & SCE_CTRL_RTRIGGER) tab = (tab + 1) % 4;

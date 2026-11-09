@@ -77,7 +77,7 @@ Prefer to let Hermes do it? There is a skill for that. `scripts/install-plugin.s
 | Square | spoken answers on or off |
 | L / R | switch page: TALK, PANEL, SESSIONS, LINK |
 | X | send a card, open a session, pair |
-| Start | quit |
+| Hold Start (1.5 s) | quit (a quick PS + Start still takes a screenshot) |
 
 The touch screen works too: tabs, cards, the talk bar and scrolling.
 
