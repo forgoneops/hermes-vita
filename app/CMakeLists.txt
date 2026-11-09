@@ -8,10 +8,10 @@ if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
   endif()
 endif()
 
-project(hermes_pocket C)
+project(hermes_vita C)
 include("${VITASDK}/share/vita.cmake" REQUIRED)
 
-set(VITA_APP_NAME "Hermes Pocket")
+set(VITA_APP_NAME "HermesVita")
 set(VITA_TITLEID "HERM00002")
 set(VITA_VERSION "01.00")
 string(TIMESTAMP BUILD_ID "%Y%m%d-%H%M%S" UTC)

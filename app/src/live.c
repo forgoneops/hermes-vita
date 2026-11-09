@@ -99,7 +99,7 @@ static void jesc(const char *in, char *out, int cap) {   /* a string into JSON t
 static int split(char *s, char **f, int max) { int n = 0; f[n++] = s; for (; *s && n < max; s++) if (*s == '|') { *s = 0; f[n++] = s + 1; } return n; }
 static void cp(char *d, int cap, const char *s) { snprintf(d, cap, "%s", s); }
 
-/* Hermes Pocket: one chat with Hermes itself (the bridge talks to Hermes' own API). S|state, then M| lines. */
+/* HermesVita: one chat with Hermes itself (the bridge talks to Hermes' own API). S|state, then M| lines. */
 static void poll(void) {
     static char buf[OUT_CAP]; ldata_t d; memset(&d, 0, sizeof d);
     int code = http("/v1/lines/hermes", NULL, 1, buf, sizeof buf);
@@ -160,7 +160,7 @@ static void run_job(int j) {
         return;
     } else if (j == 8) {                             /* download the VPK into ux0:/downloads */
         extern int live_download_vpk(void);
-        upd = live_download_vpk() ? 4 : 5; say(upd == 4 ? "saved: VitaShell > downloads > Hermes_Pocket.vpk > X" : "download failed");
+        upd = live_download_vpk() ? 4 : 5; say(upd == 4 ? "saved: VitaShell > downloads > HermesVita.vpk > X" : "download failed");
         return;
     } else if (j == 5) {                             /* new chat */
         code = http("/v1/hermes/new", "{}", 1, buf, sizeof buf);
@@ -226,7 +226,7 @@ int live_download_vpk(void) {
     int code = http_ex("/v1/app/vpk", NULL, 0, "", 1, spbuf, SPEECH_CAP);
     if (code != 200 || last_total < 100000 || spbuf[0] != 'P' || spbuf[1] != 'K') return 0;    /* a VPK is a zip */
     sceIoMkdir("ux0:/downloads", 0777);
-    FILE *f = fopen("ux0:/downloads/Hermes_Pocket.vpk", "wb"); if (!f) return 0;
+    FILE *f = fopen("ux0:/downloads/HermesVita.vpk", "wb"); if (!f) return 0;
     int ok = fwrite(spbuf, 1, last_total, f) == (size_t)last_total; fclose(f); return ok;
 }
 static void speech_poll(void) {

@@ -38,7 +38,7 @@ test("no token, a wrong token and a revoked device get nothing; the token is sto
   expect(b.revoke("vita 1")).toBe(1);
   expect((await b.handle("GET", "/v1/hermes/chat", "10.0.0.5", auth, {})).status).toBe(401);
 });
-test("Hermes Pocket: ask starts a turn, the chat shows thinking then the answer; a second ask while thinking is refused; a failure shows as failed", async () => {
+test("HermesVita: ask starts a turn, the chat shows thinking then the answer; a second ask while thinking is refused; a failure shows as failed", async () => {
   let release!: (a: string) => void, fail!: () => void, seen: unknown[] = [];
   const { b } = make(); const auth = await paired(b);
   expect((await b.handle("POST", "/v1/hermes/ask", "10.0.0.5", auth, { text: "hi" })).status).toBe(503);   // no Hermes API set
@@ -120,7 +120,7 @@ test("the app can update from this PC: build id and size, the file once paired, 
   const { b, dir } = make(); const auth = await paired(b); const dist = mkdtempSync(join(tmpdir(), "dist-"));
   const b2 = createBridge({ dir, pluginKey: "k1", dist }); // same devices file, a dist folder
   expect((await b2.lines("GET", "/v1/lines/app", "10.0.0.5", auth)).status).toBe(404);   // nothing built yet
-  writeFileSync(join(dist, "Hermes_Pocket.build"), "20261109-120000\n"); writeFileSync(join(dist, "Hermes_Pocket.vpk"), new Uint8Array([80, 75, 3, 4]));
+  writeFileSync(join(dist, "HermesVita.build"), "20261109-120000\n"); writeFileSync(join(dist, "HermesVita.vpk"), new Uint8Array([80, 75, 3, 4]));
   expect((await b2.lines("GET", "/v1/lines/app", "10.0.0.5", auth)).text).toBe("V|20261109-120000|4\nEND\n");
   expect((await b2.lines("GET", "/v1/lines/app", "10.0.0.5", null)).status).toBe(401);
   expect((await b2.appVpk("10.0.0.5", auth)).bytes?.length).toBe(4);

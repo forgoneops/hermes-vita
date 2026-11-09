@@ -22,7 +22,7 @@ It runs entirely on your own network. Nothing goes through anyone's cloud, and H
 
 ```
  PS Vita  ----  your home Wi-Fi  ---->  bridge (Bun)  ---->  Hermes API (127.0.0.1)
- Hermes Pocket    one-use code            |   |
+ HermesVita    one-use code            |   |
                   + device token          |   +--->  speech to text (any OpenAI-style server)
                                           |   +--->  Piper voice (local)
                        hermes-vita plugin +  (optional, loopback only, with a key)
@@ -39,7 +39,7 @@ It runs entirely on your own network. Nothing goes through anyone's cloud, and H
 ## Setup
 
 ```sh
-scripts/build-vpk.sh          # builds dist/Hermes_Pocket.vpk
+scripts/build-vpk.sh          # builds dist/HermesVita.vpk
 scripts/install-piper.sh      # optional: spoken answers (downloads about 90 MB)
 scripts/install-plugin.sh     # optional: live view of real sessions
 hermes plugins enable hermes-vita   # only if you installed the plugin; then restart Hermes
@@ -50,7 +50,7 @@ STT_URL=http://127.0.0.1:8000/v1/audio/transcriptions bun bridge/bridge.ts serve
 Put the app on the Vita: in VitaShell press SELECT to start FTP, then
 
 ```sh
-curl -T dist/Hermes_Pocket.vpk ftp://<vita-ip>:1337/ux0:/downloads/
+curl -T dist/HermesVita.vpk ftp://<vita-ip>:1337/ux0:/downloads/
 ```
 
 and press X on the file in VitaShell to install it.
@@ -60,10 +60,10 @@ and press X on the file in VitaShell to install it.
 ```sh
 bun bridge/bridge.ts pair
 # Pairing code 123456 (works once, 5 minutes).
-# On the Vita: Hermes Pocket > LINK > X, then type:  192.168.1.20 123456
+# On the Vita: HermesVita > LINK > X, then type:  192.168.1.20 123456
 ```
 
-On the Vita open Hermes Pocket, go to the LINK page with R, press X, and type the address and code. That is it. To remove a Vita later: `bun bridge/bridge.ts revoke <name>`.
+On the Vita open HermesVita, go to the LINK page with R, press X, and type the address and code. That is it. To remove a Vita later: `bun bridge/bridge.ts revoke <name>`.
 
 Prefer to let Hermes do it? There is a skill for that. `scripts/install-plugin.sh` also copies the `hermes-vita` skill, so you can just ask Hermes: "set up hermes-vita".
 
@@ -84,7 +84,7 @@ The touch screen works too: tabs, cards, the talk bar and scrolling.
 
 ## Updating the app
 
-Build a new VPK on the PC (`scripts/build-vpk.sh`), keep the bridge running, then on the Vita open the LINK page and press Square. The app asks your PC for the newest build, downloads it to `ux0:/downloads/Hermes_Pocket.vpk`, and you press X on that file in VitaShell to install. No FTP needed after the first install.
+Build a new VPK on the PC (`scripts/build-vpk.sh`), keep the bridge running, then on the Vita open the LINK page and press Square. The app asks your PC for the newest build, downloads it to `ux0:/downloads/HermesVita.vpk`, and you press X on that file in VitaShell to install. No FTP needed after the first install.
 
 ## Your own cards
 

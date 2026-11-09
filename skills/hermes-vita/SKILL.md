@@ -20,12 +20,12 @@ Repo: the `hermes-vita` folder this skill came from (`bridge/`, `app/`, `hermes-
 2. **Speech to text** (so your voice becomes text): set `STT_URL` to any OpenAI-compatible transcription endpoint (a local faster-whisper server, or OpenAI), optionally `STT_MODEL` and `STT_KEY`.
 3. **Spoken answers** (optional): `scripts/install-piper.sh` (downloads about 90 MB: Piper and an English voice; needs `ffmpeg`).
 4. **The plugin** (optional, live view of real sessions): `scripts/install-plugin.sh`, then `hermes plugins enable hermes-vita` and restart Hermes. Plugins are off until the user enables them; never edit `plugins.enabled` yourself without being asked.
-5. **The app.** `scripts/build-vpk.sh` makes `dist/Hermes_Pocket.vpk` (needs Docker). Copy it to the Vita: in VitaShell press SELECT to start FTP, then `curl -T dist/Hermes_Pocket.vpk ftp://<vita-ip>:1337/ux0:/downloads/`, then press X on the file in VitaShell to install. Keep the Vita awake: FTP stops when the screen sleeps.
+5. **The app.** `scripts/build-vpk.sh` makes `dist/HermesVita.vpk` (needs Docker). Copy it to the Vita: in VitaShell press SELECT to start FTP, then `curl -T dist/HermesVita.vpk ftp://<vita-ip>:1337/ux0:/downloads/`, then press X on the file in VitaShell to install. Keep the Vita awake: FTP stops when the screen sleeps.
 
 ## Pairing (every time a new Vita is added)
 1. Start the bridge: `bun bridge/bridge.ts serve` (keep it running; `VITA_HOST=0.0.0.0` is the default). The first lines tell what is on or off.
 2. Get a code: `bun bridge/bridge.ts pair`. It prints the code and the exact text to type, e.g. `192.168.1.20 123456`. The code works once, for five minutes.
-3. On the Vita: open Hermes Pocket, press R twice to the LINK page, press X, and type the printed text (PC address, a space, the code).
+3. On the Vita: open HermesVita, press R twice to the LINK page, press X, and type the printed text (PC address, a space, the code).
 4. Check: `bun bridge/bridge.ts devices`. To remove a Vita: `bun bridge/bridge.ts revoke <name>`.
 
 ## Using it

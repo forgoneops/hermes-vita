@@ -13,7 +13,7 @@
 #include "live.h"
 
 /*
- * Hermes Pocket: the Vita as a voice panel for Hermes Agent on your PC.
+ * HermesVita: the Vita as a voice panel for Hermes Agent on your PC.
  * An animated ink portrait with ten states, a TALK page (hold SELECT or the on-screen bar and talk, TRIANGLE types, the whole conversation),
  * a PANEL page (eight prompt cards), a SESSIONS page (new chat, continue an earlier session), a LINK page (pairing, status).
  * Everything goes through the bridge (bridge/bridge.ts); Hermes' API key never leaves the PC. Spoken answers: SQUARE turns them on or off.
@@ -252,7 +252,7 @@ static void draw_header(int st)
 {
     rect(0, 0, SW, 56, C_PANEL);
     diamond(32, 28, 13, C_GOLD, 1); diamond(32, 28, 5, C_PANEL, 1);
-    text(56, 38, C_TEXT, 1.0f, "HERMES"); text(56 + text_w(1.0f, "HERMES") + 14, 37, C_MUTED, 0.68f, "POCKET");
+    text(56, 38, C_TEXT, 1.0f, "HERMES"); text(56 + text_w(1.0f, "HERMES") + 14, 37, C_MUTED, 0.68f, "VITA");
     text(272, 37, C_GOLD, 0.7f, "L");
     for (int i = 0; i < 4; ++i) {
         int on = tab == i; text(TABX(i), 37, on ? C_TEXT : C_MUTED, 0.72f, tab_name[i]);

@@ -21,7 +21,7 @@ export function createBridge(d: Deps) {
   const read = <T,>(f: string, dflt: T): T => { try { return JSON.parse(readFileSync(f, "utf8")); } catch { return dflt; } };
   const save = (f: string, v: unknown) => { writeFileSync(`${f}.tmp`, JSON.stringify(v)); renameSync(`${f}.tmp`, f); };
   const audit = (ip: string, who: string, what: string) => appendFileSync(auditF, JSON.stringify({ at: now(), ip, who, what }) + "\n");
-  // Hermes Pocket: one short conversation per device with Hermes' own OpenAI-compatible API (the key stays in this process).
+  // HermesVita: one short conversation per device with Hermes' own OpenAI-compatible API (the key stays in this process).
   type Chat = { turns: { role: "user" | "assistant"; text: string; at?: number }[]; state: "idle" | "thinking" | "failed"; n: number; said: number; say?: { id: number; pcm: Promise<Uint8Array | null> } };
   const chats = new Map<string, Chat>();
   const chatOf = (n: string) => chats.get(n) ?? chats.set(n, { turns: [], state: "idle", n: 0, said: 0 }).get(n)!;
@@ -144,12 +144,12 @@ export function createBridge(d: Deps) {
   const distFile = (n: string) => join(d.dist ?? "", n);
   async function appInfo(ip: string, auth: string | null): Promise<{ status: number; text: string }> {
     if (!who(ip, auth)) return { status: 401, text: "E|not paired\n" };
-    try { return { status: 200, text: `V|${readFileSync(distFile("Hermes_Pocket.build"), "utf8").trim().replace(/[^\w.-]/g, "").slice(0, 40)}|${statSync(distFile("Hermes_Pocket.vpk")).size}\nEND\n` }; }
+    try { return { status: 200, text: `V|${readFileSync(distFile("HermesVita.build"), "utf8").trim().replace(/[^\w.-]/g, "").slice(0, 40)}|${statSync(distFile("HermesVita.vpk")).size}\nEND\n` }; }
     catch { return { status: 404, text: "E|no build on the PC\n" }; }
   }
   async function appVpk(ip: string, auth: string | null): Promise<{ status: number; bytes?: Uint8Array }> {
     const dev = who(ip, auth); if (!dev) return { status: 401 };
-    try { const b = new Uint8Array(readFileSync(distFile("Hermes_Pocket.vpk"))); audit(ip, dev.name, `app download ${b.length} bytes`); return b.length > 0 && b.length <= 1_700_000 ? { status: 200, bytes: b } : { status: 413 }; } catch { return { status: 404 }; }
+    try { const b = new Uint8Array(readFileSync(distFile("HermesVita.vpk"))); audit(ip, dev.name, `app download ${b.length} bytes`); return b.length > 0 && b.length <= 1_700_000 ? { status: 200, bytes: b } : { status: 413 }; } catch { return { status: 404 }; }
   }
   /** Hold-to-talk: a short WAV from the Vita becomes text. The caller (the Vita) then sends it like any typed message. */
   const MAX_WAV = 1_200_000;   // 16 kHz mono 16 bit is about 32 KB a second: roughly 35 seconds
@@ -196,7 +196,7 @@ if (import.meta.main) {
   });
   const lanIp = () => { for (const l of Object.values(networkInterfaces())) for (const a of l ?? []) if (a.family === "IPv4" && !a.internal) return a.address; return "<this PC's address>"; };
   const cmd = process.argv[2], port = Number(process.env.VITA_PORT ?? 4410);
-  if (cmd === "pair") { const code = b.newCode(); console.log(`Pairing code ${code} (works once, 5 minutes).\nOn the Vita: Hermes Pocket > LINK > X, then type:  ${lanIp()}${port === 4410 ? "" : ":" + port} ${code}`); }
+  if (cmd === "pair") { const code = b.newCode(); console.log(`Pairing code ${code} (works once, 5 minutes).\nOn the Vita: HermesVita > LINK > X, then type:  ${lanIp()}${port === 4410 ? "" : ":" + port} ${code}`); }
   else if (cmd === "devices") console.log(b.devices().map((x) => `${x.name}  paired ${new Date(x.at).toISOString()}  last ${x.last ? new Date(x.last).toISOString() : "never"}`).join("\n") || "none");
   else if (cmd === "revoke") console.log(`revoked ${b.revoke(process.argv[3] ?? "")}`);
   else if (cmd === "serve") {
