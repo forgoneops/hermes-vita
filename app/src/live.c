@@ -28,6 +28,7 @@ static short rec_buf[REC_MAX_SAMPLES];
 static ldata_t shared;
 static SceUID mtx;
 static lsess_t sess[12]; static int nsess = 0;
+static volatile int upd = 0;   /* see live.h */
 
 int live_state(void) { return state; }
 const char *live_status(void) { return status; }
@@ -151,6 +152,16 @@ static void run_job(int j) {
             say("sessions loaded");
         } else say("could not load sessions");
         return;
+    } else if (j == 7) {                             /* update check: V|build|size */
+        code = http("/v1/lines/app", NULL, 1, buf, sizeof buf);
+        char *v = strstr(buf, "V|");
+        if (code == 200 && v) { char *f2[4]; char *nl = strchr(v, '\n'); if (nl) *nl = 0; if (split(v, f2, 3) >= 2) { upd = strcmp(f2[1], BUILD_ID) ? 2 : 1; say(upd == 2 ? "a newer build is on the PC" : "this is the newest build"); } }
+        else { upd = 5; say(code == 404 ? "no build on the PC (run scripts/build-vpk.sh)" : "update check failed"); }
+        return;
+    } else if (j == 8) {                             /* download the VPK into ux0:/downloads */
+        extern int live_download_vpk(void);
+        upd = live_download_vpk() ? 4 : 5; say(upd == 4 ? "saved: VitaShell > downloads > Hermes_Pocket.vpk > X" : "download failed");
+        return;
     } else if (j == 5) {                             /* new chat */
         code = http("/v1/hermes/new", "{}", 1, buf, sizeof buf);
         say(code == 200 ? "new chat" : code == 409 ? "Hermes is still answering" : "not done");
@@ -211,6 +222,13 @@ static volatile int speech_on = 1, speech_stop = 0;
 void live_speech(int on) { speech_on = on; if (!on) speech_stop = 1; }
 int live_speech_state(void) { return speech_on; }
 void live_stop_speech(void) { speech_stop = 1; }
+int live_download_vpk(void) {
+    int code = http_ex("/v1/app/vpk", NULL, 0, "", 1, spbuf, SPEECH_CAP);
+    if (code != 200 || last_total < 100000 || spbuf[0] != 'P' || spbuf[1] != 'K') return 0;    /* a VPK is a zip */
+    sceIoMkdir("ux0:/downloads", 0777);
+    FILE *f = fopen("ux0:/downloads/Hermes_Pocket.vpk", "wb"); if (!f) return 0;
+    int ok = fwrite(spbuf, 1, last_total, f) == (size_t)last_total; fclose(f); return ok;
+}
 static void speech_poll(void) {
     int code = http_ex("/v1/hermes/speech/next", NULL, 0, "", 1, spbuf, SPEECH_CAP);
     if (code != 200 || last_total < 4096) return;
@@ -264,6 +282,9 @@ static int post(int j, const char *a, const char *b, const char *c) {
 void live_refresh_sessions(void) { post(4, "", "", ""); }
 void live_new_chat(void) { if (post(5, "", "", "")) say("new chat..."); }
 void live_open(const char *id) { if (post(6, id, "", "")) say("opening..."); }
+int live_update_state(void) { return upd; }
+void live_update_check(void) { if (upd != 3 && post(7, "", "", "")) say("checking for an update..."); }
+void live_update_download(void) { if (upd == 2 && post(8, "", "", "")) { upd = 3; say("downloading..."); } }
 void live_pair(const char *code) { if (post(1, code, "", "")) say("pairing..."); }
 void live_send(const char *agent, const char *thread, const char *text) { if (post(2, agent, thread, text)) say("sending..."); }
 void live_answer(const char *run, const char *ask, const char *option) { if (post(3, run, ask, option)) say("answering..."); }

@@ -14,7 +14,9 @@ include("${VITASDK}/share/vita.cmake" REQUIRED)
 set(VITA_APP_NAME "Hermes Pocket")
 set(VITA_TITLEID "HERM00002")
 set(VITA_VERSION "01.00")
-add_compile_definitions(POCKET_HERMES=1)
+string(TIMESTAMP BUILD_ID "%Y%m%d-%H%M%S" UTC)
+file(WRITE ${CMAKE_BINARY_DIR}/build_id.txt "${BUILD_ID}")   # scripts/build-vpk.sh copies it to dist/ so the bridge can tell the app a newer build exists
+add_compile_definitions(POCKET_HERMES=1 BUILD_ID="${BUILD_ID}")
 # with freetype linked the code segment ends where data starts, and vita-elf-create fails without this
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-z,separate-code")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu11 -Wall -Wextra -O2")

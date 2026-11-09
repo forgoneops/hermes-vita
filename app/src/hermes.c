@@ -352,6 +352,9 @@ static void draw_link(void)
     text(384, 340, C_MUTED, 0.55f, "The code works once, for five minutes. The PC address is in");
     text(384, 364, C_MUTED, 0.55f, "ux0:data/pocket-hermes/config.txt (host=, port=). Example: 192.168.1.20 123456");
     text(384, 400, C_MUTED, 0.55f, "Your voice goes to the PC for transcription; nothing leaves your home network.");
+    { int u = live_update_state(); const char *us = u == 0 ? "SQUARE  CHECK FOR AN APP UPDATE" : u == 1 ? "APP IS UP TO DATE   (SQUARE: CHECK AGAIN)" : u == 2 ? "NEWER BUILD ON THE PC   SQUARE: DOWNLOAD" : u == 3 ? "DOWNLOADING..." : u == 4 ? "SAVED. VITASHELL > DOWNLOADS > HERMES_POCKET.VPK > X" : "UPDATE FAILED   (SQUARE: TRY AGAIN)";
+      text(384, 474, u == 2 || u == 4 ? C_GOLD : C_MUTED, 0.5f, us);
+      char b[48]; snprintf(b, sizeof b, "BUILD %s", BUILD_ID); text(SW - 24 - text_w(0.45f, b), 474, C_LINE, 0.45f, b); }
     rect(384, 424, 210, 32, online() ? C_PANEL2 : C_GOLD); frame(384, 424, 210, 32, online() ? C_LINE : C_GOLD);
     text(384 + (210 - text_w(0.65f, "X   PAIRING CODE")) / 2.0f, 446, online() ? C_MUTED : INK, 0.65f, "X   PAIRING CODE");
 }
@@ -502,7 +505,7 @@ int main(void)
                 if ((pressed & SCE_CTRL_CROSS) || (tapped && tx >= 384 && tx <= 594 && ty >= 424 && ty <= 456)) open_ime(1);
             }
             if ((pressed & SCE_CTRL_TRIANGLE) && online()) open_ime(2);
-            if (pressed & SCE_CTRL_SQUARE) live_speech(!live_speech_state());          /* spoken answers on or off */
+            if (pressed & SCE_CTRL_SQUARE) { if (tab == 3) { if (live_update_state() == 2) live_update_download(); else live_update_check(); } else live_speech(!live_speech_state()); }   /* LINK: app update; elsewhere: spoken answers on or off */
         }
         was_touch = touching; last_ty = ty;
 

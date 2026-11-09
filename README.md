@@ -77,9 +77,14 @@ Prefer to let Hermes do it? There is a skill for that. `scripts/install-plugin.s
 | Square | spoken answers on or off |
 | L / R | switch page: TALK, PANEL, SESSIONS, LINK |
 | X | send a card, open a session, pair |
+| Square (LINK page) | check for an app update and download it from the PC |
 | Hold Start (1.5 s) | quit (a quick PS + Start still takes a screenshot) |
 
 The touch screen works too: tabs, cards, the talk bar and scrolling.
+
+## Updating the app
+
+Build a new VPK on the PC (`scripts/build-vpk.sh`), keep the bridge running, then on the Vita open the LINK page and press Square. The app asks your PC for the newest build, downloads it to `ux0:/downloads/Hermes_Pocket.vpk`, and you press X on that file in VitaShell to install. No FTP needed after the first install.
 
 ## Your own cards
 

@@ -24,6 +24,10 @@ typedef struct { char id[48], title[64]; int n; } lsess_t;
 int live_sessions(lsess_t *out, int max);   /* the recent Hermes sessions, newest first; returns the count */
 void live_refresh_sessions(void);
 void live_new_chat(void);                   /* clear this conversation and start a new one */
-void live_open(const char *id);             /* continue an earlier session */
+void live_open(const char *id);
+/* app update from the PC: 0 not checked, 1 up to date, 2 newer build available, 3 downloading, 4 saved to downloads, 5 failed */
+int live_update_state(void);
+void live_update_check(void);               /* ask the bridge for the newest build id */
+void live_update_download(void);            /* save it as ux0:/downloads/Hermes_Pocket.vpk; installing is one X in VitaShell */             /* continue an earlier session */
 int live_copy(ldata_t *out);                /* newest data; returns its version, 0 = none yet */
 #endif

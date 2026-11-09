@@ -3,13 +3,13 @@
 // revoked, a short allow-list of routes, size and rate limits, and an audit line for every write. Hermes' API key never leaves this process.
 // Run: bun bridge/bridge.ts pair | serve | devices | revoke <name>
 import { createHash, randomBytes, randomInt } from "node:crypto";
-import { appendFileSync, existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, readFileSync, renameSync, statSync, writeFileSync } from "node:fs";
 import { networkInterfaces } from "node:os";
 import { join } from "node:path";
 
 export type Device = { name: string; hash: string; at: number; last?: number };
 type Pair = { code: string; until: number };
-export type Deps = { dir: string; now?: () => number; pluginKey?: string; hermesGet?: (path: string) => Promise<any>; speak?: (text: string) => Promise<Uint8Array | null>; hermes?: (messages: { role: string; content: string }[]) => Promise<string>; transcribe?: (wav: Uint8Array) => Promise<string> };
+export type Deps = { dir: string; now?: () => number; dist?: string; pluginKey?: string; hermesGet?: (path: string) => Promise<any>; speak?: (text: string) => Promise<Uint8Array | null>; hermes?: (messages: { role: string; content: string }[]) => Promise<string>; transcribe?: (wav: Uint8Array) => Promise<string> };
 
 const sha = (s: string) => createHash("sha256").update(s).digest("hex");
 const clip = (s: unknown, n: number) => String(s ?? "").replace(/\s+/g, " ").slice(0, n);
@@ -132,12 +132,24 @@ export function createBridge(d: Deps) {
   /** The same data as flat lines for the Vita's tiny C parser: S|state, W|tool, M|role|agent|text, H|id|title|count, END. */
   const flat = (v: string) => clip(v, 600).replace(/\|/g, "/");
   async function lines(method: string, path: string, ip: string, auth: string | null): Promise<{ status: number; text: string }> {
+    if (method === "GET" && path === "/v1/lines/app") return appInfo(ip, auth);
     const m = path.match(/^\/v1\/lines\/(hermes|sessions)$/);
     if (method !== "GET" || !m) return { status: 404, text: "not found\n" };
     const r = await handle("GET", m[1] === "hermes" ? "/v1/hermes/chat" : "/v1/hermes/sessions", ip, auth, {}), j = r.json as any;
     if (r.status !== 200) return { status: r.status, text: `E|${flat(j?.error ?? "error")}\n` };
     if (m[1] === "sessions") return { status: 200, text: [...j.map((x: any) => `H|${flat(x.id)}|${flat(x.title)}|${x.n}`), "END"].join("\n") + "\n" };
     return { status: 200, text: [`S|${j.state}`, `W|${flat(j.tool ?? "")}`, ...j.messages.map((x: any) => `M|${flat(x.role)}|${flat(x.agent)}|${flat(x.text)}`), "END"].join("\n") + "\n" };
+  }
+  /** The app itself: the build id and the VPK in dist/, so the Vita can update from this PC (it saves the file; the install is one X in VitaShell). */
+  const distFile = (n: string) => join(d.dist ?? "", n);
+  async function appInfo(ip: string, auth: string | null): Promise<{ status: number; text: string }> {
+    if (!who(ip, auth)) return { status: 401, text: "E|not paired\n" };
+    try { return { status: 200, text: `V|${readFileSync(distFile("Hermes_Pocket.build"), "utf8").trim().replace(/[^\w.-]/g, "").slice(0, 40)}|${statSync(distFile("Hermes_Pocket.vpk")).size}\nEND\n` }; }
+    catch { return { status: 404, text: "E|no build on the PC\n" }; }
+  }
+  async function appVpk(ip: string, auth: string | null): Promise<{ status: number; bytes?: Uint8Array }> {
+    const dev = who(ip, auth); if (!dev) return { status: 401 };
+    try { const b = new Uint8Array(readFileSync(distFile("Hermes_Pocket.vpk"))); audit(ip, dev.name, `app download ${b.length} bytes`); return b.length > 0 && b.length <= 1_700_000 ? { status: 200, bytes: b } : { status: 413 }; } catch { return { status: 404 }; }
   }
   /** Hold-to-talk: a short WAV from the Vita becomes text. The caller (the Vita) then sends it like any typed message. */
   const MAX_WAV = 1_200_000;   // 16 kHz mono 16 bit is about 32 KB a second: roughly 35 seconds
@@ -149,7 +161,7 @@ export function createBridge(d: Deps) {
     try { const text = clip(await d.transcribe(wav), MAX_TEXT); audit(ip, dev.name, `voice ${wav.length} bytes`); return { status: 200, json: { text } }; }
     catch { return { status: 502, json: { error: "could not transcribe" } }; }
   }
-  return { handle, voice, speech, pluginEvent, lines, newCode, devices, revoke, setHermes: (f: Deps["hermes"]) => { d.hermes = f; }, setTranscribe: (f: Deps["transcribe"]) => { d.transcribe = f; }, setSpeak: (f: Deps["speak"]) => { d.speak = f; }, setHermesGet: (f: Deps["hermesGet"]) => { d.hermesGet = f; } };
+  return { handle, voice, speech, appVpk, pluginEvent, lines, newCode, devices, revoke, setHermes: (f: Deps["hermes"]) => { d.hermes = f; }, setTranscribe: (f: Deps["transcribe"]) => { d.transcribe = f; }, setSpeak: (f: Deps["speak"]) => { d.speak = f; }, setHermesGet: (f: Deps["hermesGet"]) => { d.hermesGet = f; } };
 }
 
 if (import.meta.main) {
@@ -158,7 +170,7 @@ if (import.meta.main) {
   const keyFile = join(dir, "plugin-key");
   if (!existsSync(keyFile)) writeFileSync(keyFile, randomBytes(24).toString("base64url"), { mode: 0o600 });
   const pluginKey = readFileSync(keyFile, "utf8").trim();
-  const b = createBridge({ dir, pluginKey });
+  const b = createBridge({ dir, pluginKey, dist: process.env.VITA_DIST ?? join(import.meta.dir, "../dist") });
   const hermesKey = process.env.HERMES_API_KEY ?? (() => { try { return /^API_SERVER_KEY=(.+)$/m.exec(readFileSync(join(home, ".hermes/.env"), "utf8"))?.[1]?.trim(); } catch { return undefined; } })();
   const hermesUrl = process.env.HERMES_API_URL ?? "http://127.0.0.1:8642";
   if (hermesKey) b.setHermesGet(async (path) => { const r = await fetch(`${hermesUrl}${path}`, { headers: { authorization: `Bearer ${hermesKey}` }, signal: AbortSignal.timeout(10_000) }); if (!r.ok) throw new Error(`hermes ${r.status}`); return r.json(); });
@@ -192,6 +204,7 @@ if (import.meta.main) {
       const ip = srv.requestIP(req)?.address ?? "?", url = new URL(req.url);
       if (req.method === "POST" && url.pathname === "/v1/voice") { const r = await b.voice(ip, req.headers.get("authorization"), new Uint8Array(await req.arrayBuffer())); return Response.json(r.json, { status: r.status }); }
       if (req.method === "GET" && url.pathname === "/v1/hermes/speech/next") { const r = await b.speech(ip, req.headers.get("authorization")); return r.pcm ? new Response(new Blob([r.pcm as BlobPart]), { headers: { "content-type": "audio/pcm" } }) : new Response(null, { status: r.status }); }
+      if (req.method === "GET" && url.pathname === "/v1/app/vpk") { const r = await b.appVpk(ip, req.headers.get("authorization")); return r.bytes ? new Response(new Blob([r.bytes as BlobPart]), { headers: { "content-type": "application/octet-stream" } }) : new Response(null, { status: r.status }); }
       if (Number(req.headers.get("content-length") ?? 0) > 8192) return Response.json({ error: "too large" }, { status: 413 });
       const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
       if (req.method === "POST" && url.pathname === "/_plugin/event") { const r = b.pluginEvent(ip, req.headers.get("x-hermes-vita-key"), body); return Response.json(r.json, { status: r.status }); }

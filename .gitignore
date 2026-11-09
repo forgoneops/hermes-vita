@@ -2,3 +2,4 @@
 node_modules/
 *.vpk.tmp
 __pycache__/
+dist/

@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { mkdtempSync, readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createBridge } from "../bridge/bridge";
@@ -114,4 +114,15 @@ test("lines view: flat text for the Vita, bars in text are replaced, END closes 
   expect((await b.lines("GET", "/v1/lines/hermes", "10.0.0.5", auth)).text).toBe("S|idle\nW|\nEND\n");
   b.setHermes(async () => "a | b"); await b.handle("POST", "/v1/hermes/ask", "10.0.0.5", auth, { text: "x|y" }); await new Promise((r) => setTimeout(r, 5));
   expect((await b.lines("GET", "/v1/lines/hermes", "10.0.0.5", auth)).text).toBe("S|idle\nW|\nM|user|hermes|x/y\nM|assistant|hermes|a / b\nEND\n");
+});
+
+test("the app can update from this PC: build id and size, the file once paired, nothing without a token", async () => {
+  const { b, dir } = make(); const auth = await paired(b); const dist = mkdtempSync(join(tmpdir(), "dist-"));
+  const b2 = createBridge({ dir, pluginKey: "k1", dist }); // same devices file, a dist folder
+  expect((await b2.lines("GET", "/v1/lines/app", "10.0.0.5", auth)).status).toBe(404);   // nothing built yet
+  writeFileSync(join(dist, "Hermes_Pocket.build"), "20261109-120000\n"); writeFileSync(join(dist, "Hermes_Pocket.vpk"), new Uint8Array([80, 75, 3, 4]));
+  expect((await b2.lines("GET", "/v1/lines/app", "10.0.0.5", auth)).text).toBe("V|20261109-120000|4\nEND\n");
+  expect((await b2.lines("GET", "/v1/lines/app", "10.0.0.5", null)).status).toBe(401);
+  expect((await b2.appVpk("10.0.0.5", auth)).bytes?.length).toBe(4);
+  expect((await b2.appVpk("10.0.0.5", null)).status).toBe(401);
 });
