@@ -1,0 +1,2 @@
+font.ttf is Noto Sans Mono (Medium), Copyright The Noto Project Authors, licensed under the SIL Open Font License 1.1
+(https://openfontlicense.org). It is bundled so the app can show Polish and other Latin letters the Vita's own font lacks.

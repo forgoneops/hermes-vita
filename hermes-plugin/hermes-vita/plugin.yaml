@@ -1,0 +1,3 @@
+name: hermes-vita
+version: "1.0"
+description: Tell the Hermes Vita bridge what Hermes is doing (thinking, which tool, answered, error) so a PS Vita can show it and speak the answers

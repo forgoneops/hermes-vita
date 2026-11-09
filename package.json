@@ -1,0 +1,1 @@
+{ "name": "hermes-vita", "private": true, "scripts": { "test": "bun test tests", "bridge": "bun bridge/bridge.ts serve", "pair": "bun bridge/bridge.ts pair" } }
