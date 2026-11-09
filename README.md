@@ -33,7 +33,7 @@ It runs entirely on your own network. Nothing goes through anyone's cloud, and H
 - A PS Vita with homebrew (VitaShell) on the same network as your PC
 - [Hermes Agent](https://github.com/NousResearch/hermes-agent) with its API server on (`API_SERVER_ENABLED=true` and an `API_SERVER_KEY` in `~/.hermes/.env`)
 - [Bun](https://bun.sh) and Docker (Docker is only used to build the app)
-- For your voice to become text: any OpenAI-compatible transcription server, for example a local faster-whisper server
+- For your voice to become text: any OpenAI-compatible transcription server, for example a local faster-whisper server (`STT_URL`, and optionally `STT_MODEL`, `STT_KEY` or `STT_HEADERS` as JSON)
 - For spoken answers: `ffmpeg`, plus about 90 MB for Piper and a voice
 
 ## Setup

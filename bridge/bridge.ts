@@ -170,7 +170,7 @@ if (import.meta.main) {
   // Speech to text: any OpenAI-compatible server (STT_URL, e.g. a local faster-whisper server, or OpenAI).
   if (process.env.STT_URL) b.setTranscribe(async (wav) => {
     const f = new FormData(); f.set("file", new Blob([wav as BlobPart], { type: "audio/wav" }), "voice.wav"); f.set("model", process.env.STT_MODEL ?? "whisper-1");
-    const r = await fetch(process.env.STT_URL!, { method: "POST", headers: process.env.STT_KEY ? { authorization: `Bearer ${process.env.STT_KEY}` } : {}, body: f, signal: AbortSignal.timeout(120_000) });
+    const r = await fetch(process.env.STT_URL!, { method: "POST", headers: { ...(process.env.STT_KEY ? { authorization: `Bearer ${process.env.STT_KEY}` } : {}), ...JSON.parse(process.env.STT_HEADERS ?? "{}") }, body: f, signal: AbortSignal.timeout(120_000) });
     if (!r.ok) throw new Error(`stt ${r.status}`);
     return String((await r.json() as any).text ?? "").trim();
   });
