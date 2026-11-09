@@ -18,6 +18,14 @@ It runs entirely on your own network. Nothing goes through anyone's cloud, and H
 - **Live view of your real sessions** (optional plugin): when Hermes works on your PC in the desktop app or the terminal, the Vita shows it and reads out the answer.
 - **Easy pairing**: one command on the PC prints a short text, you type it on the Vita once.
 
+## Screenshots
+
+<p align="center">
+<img src="docs/screenshot-talk.png" alt="The TALK page" width="48%"> <img src="docs/screenshot-panel.png" alt="The PANEL page while Hermes is working" width="48%">
+</p>
+
+Left: the TALK page, ready. Right: the PANEL page with eight prompt cards while Hermes is working on a request (the orb above the open hand is busy).
+
 ## How it fits together
 
 ```
